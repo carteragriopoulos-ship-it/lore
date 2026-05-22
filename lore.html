@@ -17,8 +17,6 @@
   --radius:16px;--radius-sm:10px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;overflow:hidden}
-
-/* INPUTS */
 input[type=text],input[type=password],select,textarea{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 14px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 input::placeholder,textarea::placeholder{color:var(--text-dim)}
@@ -74,13 +72,15 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 .msg-bubble{padding:10px 14px;border-radius:14px;line-height:1.7;font-size:15px;white-space:pre-wrap;word-break:break-word}
 .msg.user .msg-bubble{background:var(--user-bg);border:1px solid rgba(180,170,255,0.08);border-bottom-right-radius:3px}
 .msg.assistant .msg-bubble{background:transparent;border:none;padding:0}
+.memory-pill{align-self:center;font-size:11px;color:var(--text-dim);background:var(--raised);border:1px solid var(--border);border-radius:20px;padding:4px 12px;margin:4px 0;letter-spacing:.04em}
 .typing-indicator{display:flex;align-items:center;gap:4px;height:22px}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--text-mid);animation:blink 1.2s infinite}
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,100%{opacity:.15}50%{opacity:.9}}
 .sep-line{text-align:center;font-size:12px;color:var(--text-dim);padding:10px 0;letter-spacing:.06em;flex-shrink:0}
-.token-bar{flex-shrink:0;padding:4px 16px;display:flex;align-items:center;justify-content:flex-end;gap:6px;border-top:1px solid var(--border)}
-.token-lbl{font-size:11px;color:var(--text-dim)}.token-val{font-size:11px;color:var(--text-mid)}
+.status-bar{flex-shrink:0;padding:4px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+.status-left{font-size:11px;color:var(--text-dim)}
+.token-val{font-size:11px;color:var(--text-mid)}
 .input-wrap{flex-shrink:0;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:var(--bg)}
 .input-row{display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:7px 7px 7px 14px;transition:border-color .2s}
 .input-row:focus-within{border-color:var(--border-med)}
@@ -94,6 +94,19 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 .panel-overlay.open{display:flex}
 .panel-sheet{background:#0f0f1c;border:1px solid var(--border-med);border-bottom:none;border-radius:22px 22px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:0 20px calc(28px + env(safe-area-inset-bottom))}
 .panel-handle{width:36px;height:4px;background:var(--border-med);border-radius:2px;margin:14px auto 22px}
+
+/* CHATS LIST */
+.chat-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--raised);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.chat-item.active{border-color:var(--accent)}
+.chat-item:active{opacity:.7}
+.chat-item-info{flex:1;min-width:0}
+.chat-item-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item-preview{font-size:12px;color:var(--text-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chat-item-date{font-size:11px;color:var(--text-dim);flex-shrink:0}
+.chat-del{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:6px;display:flex;align-items:center;flex-shrink:0}
+.chat-del:active{color:var(--danger)}
+.new-chat-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--accent-soft);border:1px solid rgba(201,164,90,0.2);border-radius:var(--radius-sm);cursor:pointer;color:var(--accent);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:16px;width:100%}
+.new-chat-btn:active{opacity:.7}
 
 /* LOREBOOK */
 .lb-entry{background:var(--raised);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 36px 12px 12px;margin-bottom:10px;position:relative}
@@ -109,110 +122,72 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 </head>
 <body>
 
-<!-- ══════════ SETUP ══════════ -->
+<!-- SETUP -->
 <div id="screen-setup">
 <div class="setup-wrap">
-
   <div class="logo-block">
     <div class="logo-name">Lore</div>
     <div class="logo-tagline">Private AI Roleplay</div>
   </div>
-
   <div class="privacy-pill">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    <span>Your API key and chat logs never leave your device. Every call goes directly from your browser to OpenRouter — no servers, no accounts, no data collected by this app.</span>
+    <span>Your API key and chats never leave your device. Every call goes directly from your browser to OpenRouter — no servers, no accounts, no data collected.</span>
   </div>
-
   <div class="field">
     <label class="lbl">OpenRouter API Key</label>
     <div class="key-wrap">
       <input type="password" id="s-key" placeholder="sk-or-v1-..." autocomplete="off" spellcheck="false">
-      <button class="show-key-btn" onclick="toggleVis('s-key',this)" type="button">
+      <button class="show-key-btn" onclick="toggleVis('s-key')" type="button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
   </div>
-
   <div class="field">
     <label class="lbl">Model</label>
     <select id="s-model">
       <option value="google/gemini-2.5-flash-preview">✦ Gemini 2.5 Flash — Best for long stories</option>
       <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash — Faster &amp; cheaper</option>
-      <option value="deepseek/deepseek-chat-v3-5">DeepSeek V3 — Rich prose quality</option>
-      <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5 — Sharp and fast</option>
-      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Most capable</option>
+      <option value="deepseek/deepseek-chat-v3-5">DeepSeek V3 — Rich prose</option>
+      <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
+      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
       <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B — Free tier option</option>
+      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B — Free option</option>
     </select>
   </div>
-
   <div class="divider"></div>
   <div class="section-title">Character</div>
-
-  <div class="field">
-    <label class="lbl">Name</label>
-    <input type="text" id="s-cname" placeholder="e.g. Elara, Viktor, The Stranger..." autocorrect="off">
-  </div>
-  <div class="field">
-    <label class="lbl">Personality</label>
-    <textarea id="s-cperson" rows="3" placeholder="Core traits, speech style, quirks, mannerisms..."></textarea>
-  </div>
-  <div class="field">
-    <label class="lbl">Scenario</label>
-    <textarea id="s-cscene" rows="3" placeholder="The setting and situation when the story begins..."></textarea>
-  </div>
-  <div class="field">
-    <label class="lbl">First Message <span class="tag">optional</span></label>
-    <textarea id="s-cfirst" rows="3" placeholder="How the character opens the scene. Leave blank to start yourself."></textarea>
-  </div>
-  <div class="field">
-    <label class="lbl">Example Dialogue <span class="tag">optional</span></label>
-    <textarea id="s-cexample" rows="3" placeholder="&lt;USER&gt;: Hello&#10;&lt;CHAR&gt;: How they'd respond..."></textarea>
-  </div>
-
+  <div class="field"><label class="lbl">Name</label><input type="text" id="s-cname" placeholder="e.g. Elara, Viktor, The Stranger..." autocorrect="off"></div>
+  <div class="field"><label class="lbl">Personality</label><textarea id="s-cperson" rows="3" placeholder="Core traits, speech style, quirks, mannerisms..."></textarea></div>
+  <div class="field"><label class="lbl">Scenario</label><textarea id="s-cscene" rows="3" placeholder="The setting and situation when the story begins..."></textarea></div>
+  <div class="field"><label class="lbl">First Message <span class="tag">optional</span></label><textarea id="s-cfirst" rows="3" placeholder="How the character opens the scene."></textarea></div>
+  <div class="field"><label class="lbl">Example Dialogue <span class="tag">optional</span></label><textarea id="s-cexample" rows="3" placeholder="&lt;USER&gt;: Hello&#10;&lt;CHAR&gt;: How they'd respond..."></textarea></div>
   <div class="divider"></div>
-
   <div class="accordion-hd" onclick="toggleAcc(this)">
     <span>Advanced — Persona &amp; Author's Note</span>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
   </div>
   <div class="accordion-body">
-    <div class="field">
-      <label class="lbl">Your Persona Name</label>
-      <input type="text" id="s-pname" placeholder="Your character's name in the story" autocorrect="off">
-    </div>
-    <div class="field">
-      <label class="lbl">Your Persona Description</label>
-      <textarea id="s-pdesc" rows="2" placeholder="Who you are in this world..."></textarea>
-    </div>
-    <div class="field">
-      <label class="lbl">Author's Note</label>
-      <textarea id="s-anote" rows="2" placeholder="Style instructions injected near the end of context — e.g. 'Write in a dark gothic style. Be vivid and descriptive.'"></textarea>
-    </div>
+    <div class="field"><label class="lbl">Your Persona Name</label><input type="text" id="s-pname" placeholder="Your character's name" autocorrect="off"></div>
+    <div class="field"><label class="lbl">Your Persona Description</label><textarea id="s-pdesc" rows="2" placeholder="Who you are in this world..."></textarea></div>
+    <div class="field"><label class="lbl">Author's Note</label><textarea id="s-anote" rows="2" placeholder="Style instructions injected near the end of context..."></textarea></div>
     <div class="field">
       <label class="lbl">Author's Note Depth</label>
       <select id="s-adepth">
-        <option value="2">2 messages from end — Very strong influence</option>
-        <option value="4" selected>4 messages from end — Recommended</option>
-        <option value="8">8 messages from end — Subtle</option>
+        <option value="2">2 — Very strong</option>
+        <option value="4" selected>4 — Recommended</option>
+        <option value="8">8 — Subtle</option>
       </select>
     </div>
   </div>
-
   <div class="divider"></div>
-  <label class="remember-row">
-    <input type="checkbox" id="s-remember">
-    Keep me signed in on this device
-  </label>
-
+  <label class="remember-row"><input type="checkbox" id="s-remember">Keep me signed in on this device</label>
   <button class="btn btn-primary" onclick="startChat()" style="margin-bottom:10px">Enter the Story →</button>
   <button class="btn btn-ghost" onclick="g('import-setup').click()">Import Character Card (.json)</button>
   <input type="file" id="import-setup" accept=".json" style="display:none" onchange="importCard(event)">
-
 </div>
 </div>
 
-<!-- ══════════ CHAT ══════════ -->
+<!-- CHAT -->
 <div id="screen-chat">
   <div class="chat-header">
     <div>
@@ -220,6 +195,9 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       <div class="char-hdr-sub" id="hdr-sub">ready</div>
     </div>
     <div class="hdr-btns">
+      <button class="icon-btn" onclick="openPanel('panel-chats')" aria-label="Chats">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
       <button class="icon-btn" onclick="openPanel('panel-lb')" aria-label="Lorebook">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       </button>
@@ -228,14 +206,11 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       </button>
     </div>
   </div>
-
   <div class="messages" id="messages"></div>
-
-  <div class="token-bar">
-    <span class="token-lbl">context ~tokens</span>
-    <span class="token-val" id="token-val">0</span>
+  <div class="status-bar">
+    <span class="status-left" id="status-left"></span>
+    <span class="token-val" id="token-val">0 tokens</span>
   </div>
-
   <div class="input-wrap">
     <div class="input-row">
       <textarea id="msg-input" placeholder="Write your message…" rows="1" onkeydown="handleKey(event)"></textarea>
@@ -246,17 +221,29 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   </div>
 </div>
 
-<!-- ══════════ SETTINGS PANEL ══════════ -->
+<!-- CHATS PANEL -->
+<div class="panel-overlay" id="panel-chats" onclick="overlayClick(event,this)">
+<div class="panel-sheet">
+  <div class="panel-handle"></div>
+  <div class="section-title">Chats</div>
+  <button class="new-chat-btn" onclick="newChat()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Chat
+  </button>
+  <div id="chats-list"></div>
+</div>
+</div>
+
+<!-- SETTINGS PANEL -->
 <div class="panel-overlay" id="panel-settings" onclick="overlayClick(event,this)">
 <div class="panel-sheet">
   <div class="panel-handle"></div>
   <div class="section-title">Settings</div>
-
   <div class="field">
     <label class="lbl">API Key</label>
     <div class="key-wrap">
       <input type="password" id="p-key" autocomplete="off" spellcheck="false">
-      <button class="show-key-btn" onclick="toggleVis('p-key',this)" type="button">
+      <button class="show-key-btn" onclick="toggleVis('p-key')" type="button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
@@ -273,7 +260,6 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
     </select>
   </div>
-
   <div class="divider"></div>
   <div class="section-title" style="font-size:17px">Character</div>
   <div class="field"><label class="lbl">Name</label><input type="text" id="p-cname" autocorrect="off"></div>
@@ -281,7 +267,6 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field"><label class="lbl">Scenario</label><textarea id="p-cscene" rows="3"></textarea></div>
   <div class="field"><label class="lbl">First Message</label><textarea id="p-cfirst" rows="2"></textarea></div>
   <div class="field"><label class="lbl">Example Dialogue</label><textarea id="p-cexample" rows="2"></textarea></div>
-
   <div class="divider"></div>
   <div class="section-title" style="font-size:17px">Persona &amp; Author's Note</div>
   <div class="field"><label class="lbl">Your Persona Name</label><input type="text" id="p-pname" autocorrect="off"></div>
@@ -295,7 +280,6 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       <option value="8">8 — Subtle</option>
     </select>
   </div>
-
   <div class="divider"></div>
   <button class="btn btn-primary" onclick="saveSettings()" style="margin-bottom:10px">Save Changes</button>
   <button class="btn btn-ghost" onclick="exportCard()" style="margin-bottom:10px">Export Character Card (.json)</button>
@@ -306,22 +290,16 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 </div>
 </div>
 
-<!-- ══════════ LOREBOOK PANEL ══════════ -->
+<!-- LOREBOOK PANEL -->
 <div class="panel-overlay" id="panel-lb" onclick="overlayClick(event,this)">
 <div class="panel-sheet">
   <div class="panel-handle"></div>
   <div class="section-title">Lorebook <span class="tag" style="font-family:'DM Sans',sans-serif;font-size:11px;vertical-align:middle">World Info</span></div>
-  <p style="font-size:13px;color:var(--text-mid);margin-bottom:18px;line-height:1.6">When a keyword appears in recent messages, its entry is silently injected into context. Use it for locations, NPCs, lore, magic systems — anything the AI should remember.</p>
+  <p style="font-size:13px;color:var(--text-mid);margin-bottom:18px;line-height:1.6">Entries are silently injected when their keyword appears in recent messages. Use for secondary characters, locations, or lore.</p>
   <div id="lb-list"></div>
   <div class="lb-add-box">
-    <div class="field" style="margin-bottom:0">
-      <label class="lbl">Trigger Keyword</label>
-      <input type="text" id="lb-kw" placeholder="e.g. Ironkeep, Elena, void crystal..." autocorrect="off">
-    </div>
-    <div class="field" style="margin-bottom:0">
-      <label class="lbl">Content</label>
-      <textarea id="lb-ct" rows="3" placeholder="What the AI should know when this keyword appears in conversation..."></textarea>
-    </div>
+    <div class="field" style="margin-bottom:0"><label class="lbl">Trigger Keyword</label><input type="text" id="lb-kw" placeholder="e.g. Ms. Patel, Ironkeep, void crystal..." autocorrect="off"></div>
+    <div class="field" style="margin-bottom:0"><label class="lbl">Content</label><textarea id="lb-ct" rows="3" placeholder="What the AI should know when this keyword appears..."></textarea></div>
     <button class="btn btn-ghost" onclick="addLBEntry()" style="margin-top:2px">+ Add Entry</button>
   </div>
 </div>
@@ -330,15 +308,74 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 <div id="toast"></div>
 
 <script>
-const S={
-  apiKey:'',model:'google/gemini-2.5-flash-preview',
+// ─── STATE ───
+const S = {
+  apiKey:'', model:'google/gemini-2.5-flash-preview',
   char:{name:'',person:'',scene:'',first:'',example:''},
   persona:{name:'',desc:''},
-  authorNote:'',anDepth:4,
-  lorebook:[],conversation:[],streaming:false
+  authorNote:'', anDepth:4,
+  lorebook:[], conversation:[], memory:'',
+  currentChatId:null, streaming:false
 };
 
-/* ─── HELPERS ─── */
+const MEMORY_TRIGGER = 30; // summarize after this many messages
+const MEMORY_BATCH = 20;   // summarize this many old messages at once
+
+// ─── CHAT STORAGE ───
+function getChatIndex(){
+  try{return JSON.parse(localStorage.getItem('lore_chat_index')||'[]')}catch{return[]}
+}
+function saveChatIndex(idx){localStorage.setItem('lore_chat_index',JSON.stringify(idx))}
+
+function saveChatData(){
+  if(!S.currentChatId) return;
+  const data={
+    messages:S.conversation, memory:S.memory,
+    char:S.char, persona:S.persona,
+    authorNote:S.authorNote, anDepth:S.anDepth,
+    lorebook:S.lorebook
+  };
+  localStorage.setItem('lore_chat_'+S.currentChatId, JSON.stringify(data));
+  // update index
+  const idx=getChatIndex();
+  const entry=idx.find(e=>e.id===S.currentChatId);
+  const lastMsg=S.conversation.length?S.conversation[S.conversation.length-1].content.slice(0,60):'';
+  if(entry){
+    entry.updatedAt=Date.now();
+    entry.lastMsg=lastMsg;
+    entry.charName=S.char.name;
+  }else{
+    idx.unshift({id:S.currentChatId,charName:S.char.name,lastMsg,createdAt:Date.now(),updatedAt:Date.now()});
+  }
+  saveChatIndex(idx);
+}
+
+function loadChatData(id){
+  try{
+    const raw=localStorage.getItem('lore_chat_'+id);
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    S.conversation=d.messages||[];
+    S.memory=d.memory||'';
+    S.char=d.char||S.char;
+    S.persona=d.persona||S.persona;
+    S.authorNote=d.authorNote||'';
+    S.anDepth=d.anDepth||4;
+    S.lorebook=d.lorebook||[];
+    S.currentChatId=id;
+    return true;
+  }catch{return false}
+}
+
+function deleteChatData(id){
+  localStorage.removeItem('lore_chat_'+id);
+  const idx=getChatIndex().filter(e=>e.id!==id);
+  saveChatIndex(idx);
+}
+
+function newChatId(){return 'chat_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)}
+
+// ─── HELPERS ───
 function g(id){return document.getElementById(id)}
 function toast(msg,ok){
   const t=g('toast');t.textContent=msg;
@@ -346,58 +383,53 @@ function toast(msg,ok){
   t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2500);
 }
 function getStore(){return localStorage.getItem('lore_remember')==='1'?localStorage:sessionStorage}
-function persist(){
+function persistConfig(){
   const st=getStore();
   st.setItem('lore_key',S.apiKey);st.setItem('lore_model',S.model);
-  st.setItem('lore_cname',S.char.name);st.setItem('lore_cperson',S.char.person);
-  st.setItem('lore_cscene',S.char.scene);st.setItem('lore_cfirst',S.char.first);
-  st.setItem('lore_cexample',S.char.example);st.setItem('lore_pname',S.persona.name);
-  st.setItem('lore_pdesc',S.persona.desc);st.setItem('lore_anote',S.authorNote);
-  st.setItem('lore_adepth',S.anDepth);st.setItem('lore_lorebook',JSON.stringify(S.lorebook));
-}
-function loadFromStore(st){
-  S.apiKey=st.getItem('lore_key')||'';
-  S.model=st.getItem('lore_model')||S.model;
-  S.char={name:st.getItem('lore_cname')||'',person:st.getItem('lore_cperson')||'',scene:st.getItem('lore_cscene')||'',first:st.getItem('lore_cfirst')||'',example:st.getItem('lore_cexample')||''};
-  S.persona={name:st.getItem('lore_pname')||'',desc:st.getItem('lore_pdesc')||''};
-  S.authorNote=st.getItem('lore_anote')||'';S.anDepth=parseInt(st.getItem('lore_adepth'))||4;
-  try{S.lorebook=JSON.parse(st.getItem('lore_lorebook')||'[]')}catch{S.lorebook=[]}
 }
 
-/* ─── INIT ─── */
+// ─── INIT ───
 function init(){
-  const isRemembered=localStorage.getItem('lore_remember')==='1';
-  const st=isRemembered?localStorage:sessionStorage;
-  if(st.getItem('lore_key')){
-    loadFromStore(st);
-    if(S.char.name){enterChat();return}
-    fillSetup();
+  const rem=localStorage.getItem('lore_remember')==='1';
+  const st=rem?localStorage:sessionStorage;
+  const k=st.getItem('lore_key');
+  if(k){
+    S.apiKey=k; S.model=st.getItem('lore_model')||S.model;
+    // check for last chat
+    const idx=getChatIndex();
+    if(idx.length>0&&loadChatData(idx[0].id)){
+      enterChat(); return;
+    }
   }
+  if(k){g('s-key').value=k;g('s-model').value=S.model;g('s-remember').checked=rem}
 }
 
 function fillSetup(){
-  g('s-key').value=S.apiKey;g('s-model').value=S.model;
-  g('s-cname').value=S.char.name;g('s-cperson').value=S.char.person;
-  g('s-cscene').value=S.char.scene;g('s-cfirst').value=S.char.first;
-  g('s-cexample').value=S.char.example;g('s-pname').value=S.persona.name;
-  g('s-pdesc').value=S.persona.desc;g('s-anote').value=S.authorNote;
+  g('s-key').value=S.apiKey; g('s-model').value=S.model;
+  g('s-cname').value=S.char.name; g('s-cperson').value=S.char.person;
+  g('s-cscene').value=S.char.scene; g('s-cfirst').value=S.char.first;
+  g('s-cexample').value=S.char.example; g('s-pname').value=S.persona.name;
+  g('s-pdesc').value=S.persona.desc; g('s-anote').value=S.authorNote;
   g('s-adepth').value=S.anDepth;
-  g('s-remember').checked=localStorage.getItem('lore_remember')==='1';
 }
 
-/* ─── SETUP → CHAT ─── */
+// ─── SETUP → CHAT ───
 function startChat(){
-  const k=g('s-key').value.trim(),n=g('s-cname').value.trim();
+  const k=g('s-key').value.trim(), n=g('s-cname').value.trim();
   if(!k){toast('Enter your OpenRouter API key');return}
   if(!n){toast('Give your character a name');return}
-  S.apiKey=k;S.model=g('s-model').value;
+  S.apiKey=k; S.model=g('s-model').value;
   S.char={name:n,person:g('s-cperson').value.trim(),scene:g('s-cscene').value.trim(),first:g('s-cfirst').value.trim(),example:g('s-cexample').value.trim()};
   S.persona={name:g('s-pname').value.trim(),desc:g('s-pdesc').value.trim()};
-  S.authorNote=g('s-anote').value.trim();S.anDepth=parseInt(g('s-adepth').value);
+  S.authorNote=g('s-anote').value.trim(); S.anDepth=parseInt(g('s-adepth').value);
+  S.conversation=[]; S.memory=''; S.lorebook=[];
   const rem=g('s-remember').checked;
   localStorage.setItem('lore_remember',rem?'1':'0');
   if(!rem)localStorage.removeItem('lore_key');
-  persist();enterChat();
+  persistConfig();
+  S.currentChatId=newChatId();
+  saveChatData();
+  enterChat();
 }
 
 function enterChat(){
@@ -405,24 +437,95 @@ function enterChat(){
   g('screen-chat').style.display='flex';
   g('hdr-name').textContent=S.char.name;
   g('hdr-sub').textContent=S.model.split('/').pop().replace(/-/g,' ');
-  if(S.conversation.length===0){
-    addSep('— '+S.char.name+' —');
-    if(S.char.first){
-      S.conversation.push({role:'assistant',content:S.char.first});
-      renderMsg('assistant',S.char.first);
-    }
-  }
-  setupTA();updateTokens();
+  renderAllMessages();
+  setupTA(); updateTokens();
 }
 
-/* ─── MESSAGING ─── */
+function renderAllMessages(){
+  const wrap=g('messages'); wrap.innerHTML='';
+  if(S.memory){
+    const pill=document.createElement('div');
+    pill.className='memory-pill';
+    pill.textContent='✦ Memory active — '+Math.round(S.memory.length/4)+' tokens of story context';
+    wrap.appendChild(pill);
+  }
+  addSep('— '+S.char.name+' —');
+  if(S.conversation.length===0&&S.char.first){
+    S.conversation.push({role:'assistant',content:S.char.first});
+  }
+  S.conversation.forEach(m=>renderMsg(m.role,m.content,false));
+  scrollBot();
+}
+
+// ─── CHATS PANEL ───
+function renderChatsList(){
+  const idx=getChatIndex();
+  const list=g('chats-list');
+  list.innerHTML='';
+  if(idx.length===0){
+    list.innerHTML='<p style="font-size:13px;color:var(--text-dim);padding:8px 0">No saved chats yet.</p>';
+    return;
+  }
+  idx.forEach(chat=>{
+    const div=document.createElement('div');
+    div.className='chat-item'+(chat.id===S.currentChatId?' active':'');
+    const date=new Date(chat.updatedAt);
+    const dateStr=date.toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+    div.innerHTML=`
+      <div class="chat-item-info" onclick="switchChat('${chat.id}')">
+        <div class="chat-item-name">${chat.charName||'Unnamed'}</div>
+        <div class="chat-item-preview">${(chat.lastMsg||'New chat').replace(/</g,'&lt;')}</div>
+      </div>
+      <div class="chat-item-date">${dateStr}</div>
+      <button class="chat-del" onclick="deleteChatById('${chat.id}')" aria-label="Delete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>`;
+    list.appendChild(div);
+  });
+}
+
+function switchChat(id){
+  if(id===S.currentChatId){closePanel('panel-chats');return}
+  saveChatData();
+  if(loadChatData(id)){
+    g('hdr-name').textContent=S.char.name;
+    g('hdr-sub').textContent=S.model.split('/').pop().replace(/-/g,' ');
+    renderAllMessages(); updateTokens();
+    closePanel('panel-chats');
+  }
+}
+
+function newChat(){
+  saveChatData();
+  S.conversation=[]; S.memory=[]; S.currentChatId=null;
+  closePanel('panel-chats');
+  g('screen-chat').style.display='none';
+  g('screen-setup').style.display='flex';
+  fillSetup();
+}
+
+function deleteChatById(id){
+  deleteChatData(id);
+  if(id===S.currentChatId){
+    const idx=getChatIndex();
+    if(idx.length>0){switchChat(idx[0].id);return}
+    else{
+      S.conversation=[];S.memory='';S.currentChatId=null;
+      g('screen-chat').style.display='none';
+      g('screen-setup').style.display='flex';
+      closePanel('panel-chats');
+      return;
+    }
+  }
+  renderChatsList();
+}
+
+// ─── MESSAGING ───
 function setupTA(){
   const ta=g('msg-input');
   ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,110)+'px'});
 }
-function handleKey(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
-}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
 
 async function sendMessage(){
   if(S.streaming)return;
@@ -430,23 +533,31 @@ async function sendMessage(){
   if(!txt)return;
   ta.value='';ta.style.height='auto';
   S.conversation.push({role:'user',content:txt});
-  renderMsg('user',txt);updateTokens();
-  const tid=renderTyping();S.streaming=true;
+  renderMsg('user',txt);
+  updateTokens();
+  const tid=renderTyping();
+  S.streaming=true;
   try{await streamReply(tid)}
   catch(err){removeEl(tid);S.conversation.pop();toast(err.message||'Connection error')}
-  finally{S.streaming=false}
+  finally{
+    S.streaming=false;
+    saveChatData();
+    await maybeCondenseMemory();
+  }
 }
 
 function buildSysPrompt(){
   const c=S.char,p=S.persona;
-  let s=`You are ${c.name}.\n`;
+  let s='';
+  if(S.memory)s+=`[Story so far]\n${S.memory}\n\n`;
+  s+=`You are ${c.name}.\n`;
   if(c.person)s+=`Personality: ${c.person}\n`;
   if(c.scene)s+=`Scenario: ${c.scene}\n`;
   if(c.example)s+=`\nExample of how ${c.name} speaks:\n${c.example}\n`;
   if(p.name||p.desc){s+=`\nThe person you're speaking with is ${p.name||'the user'}`;if(p.desc)s+=`: ${p.desc}`;s+='\n'}
   const recent=S.conversation.slice(-14).map(m=>m.content).join(' ').toLowerCase();
   S.lorebook.forEach(e=>{if(e.keyword&&recent.includes(e.keyword.toLowerCase()))s+=`\n[World info — ${e.keyword}]: ${e.content}`});
-  s+='\n\nStay fully in character at all times. Write immersively and expressively. Do not break the fourth wall or mention being an AI.';
+  s+='\n\nStay fully in character. Write immersively and expressively. Do not break the fourth wall.';
   return s;
 }
 
@@ -487,13 +598,47 @@ async function streamReply(typingId){
   if(full){S.conversation.push({role:'assistant',content:full});updateTokens()}
 }
 
-function renderMsg(role,content){
+// ─── MEMORY / SUMMARIZATION ───
+async function maybeCondenseMemory(){
+  if(S.conversation.length < MEMORY_TRIGGER) return;
+  const toSummarize=S.conversation.slice(0, MEMORY_BATCH);
+  setStatus('Condensing memory…');
+  try{
+    const prompt=`The following is part of an ongoing roleplay story. Write a concise 2-3 paragraph summary of what has happened, covering key events, emotional beats, relationship developments, and important details. Be specific and preserve nuance.\n\n---\n${toSummarize.map(m=>(m.role==='user'?'USER':'CHAR')+': '+m.content).join('\n\n')}`;
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${S.apiKey}`,'Content-Type':'application/json'},
+      body:JSON.stringify({model:S.model,messages:[{role:'user',content:prompt}],max_tokens:600,temperature:0.3})
+    });
+    if(res.ok){
+      const j=await res.json();
+      const summary=j.choices?.[0]?.message?.content||'';
+      if(summary){
+        const prev=S.memory?S.memory+'\n\n':' ';
+        S.memory=prev+summary;
+        S.conversation=S.conversation.slice(MEMORY_BATCH);
+        saveChatData();
+        // add pill to messages
+        const wrap=g('messages');
+        const pill=document.createElement('div');pill.className='memory-pill';
+        pill.textContent='✦ Memory condensed — story context preserved';
+        wrap.insertBefore(pill,wrap.firstChild);
+        toast('Memory condensed',true);
+      }
+    }
+  }catch(e){console.warn('Memory condensation failed',e)}
+  setStatus('');
+  updateTokens();
+}
+
+// ─── RENDER ───
+function renderMsg(role,content,scroll=true){
   const wrap=g('messages');
   const div=document.createElement('div');div.className=`msg ${role}`;
   const nm=document.createElement('div');nm.className='msg-name';
   nm.textContent=role==='user'?(S.persona.name||'You'):S.char.name;
   const bbl=document.createElement('div');bbl.className='msg-bubble';bbl.textContent=content;
-  div.append(nm,bbl);wrap.appendChild(div);scrollBot();return div;
+  div.append(nm,bbl);wrap.appendChild(div);if(scroll)scrollBot();return div;
 }
 function renderTyping(){
   const id='ty'+Date.now();
@@ -508,22 +653,25 @@ function addSep(txt){
 }
 function removeEl(id){const e=document.getElementById(id);if(e)e.remove()}
 function scrollBot(){const m=g('messages');m.scrollTop=m.scrollHeight}
+function setStatus(txt){g('status-left').textContent=txt}
 function updateTokens(){
   const sys=buildSysPrompt();
   const conv=S.conversation.map(m=>m.content).join(' ');
-  g('token-val').textContent=Math.round((sys.length+conv.length)/4).toLocaleString();
+  const est=Math.round((sys.length+conv.length)/4);
+  g('token-val').textContent=est.toLocaleString()+' tokens';
 }
 
-/* ─── PANELS ─── */
+// ─── PANELS ───
 function openPanel(id){
   if(id==='panel-settings')fillPanelSettings();
   if(id==='panel-lb')renderLorebook();
+  if(id==='panel-chats')renderChatsList();
   g(id).classList.add('open');
 }
 function closePanel(id){g(id).classList.remove('open')}
 function overlayClick(e,el){if(e.target===el)el.classList.remove('open')}
 
-/* ─── SETTINGS ─── */
+// ─── SETTINGS ───
 function fillPanelSettings(){
   g('p-key').value=S.apiKey;g('p-model').value=S.model;
   g('p-cname').value=S.char.name;g('p-cperson').value=S.char.person;
@@ -539,28 +687,28 @@ function saveSettings(){
   S.char={name:n,person:g('p-cperson').value.trim(),scene:g('p-cscene').value.trim(),first:g('p-cfirst').value.trim(),example:g('p-cexample').value.trim()};
   S.persona={name:g('p-pname').value.trim(),desc:g('p-pdesc').value.trim()};
   S.authorNote=g('p-anote').value.trim();S.anDepth=parseInt(g('p-adepth').value);
-  persist();
+  persistConfig();saveChatData();
   g('hdr-name').textContent=S.char.name;
   g('hdr-sub').textContent=S.model.split('/').pop().replace(/-/g,' ');
   closePanel('panel-settings');toast('Saved',true);
 }
 function clearChat(){
-  S.conversation=[];g('messages').innerHTML='';
+  S.conversation=[];S.memory='';
+  saveChatData();
+  g('messages').innerHTML='';
   addSep('— '+S.char.name+' —');
   if(S.char.first){S.conversation.push({role:'assistant',content:S.char.first});renderMsg('assistant',S.char.first)}
   updateTokens();closePanel('panel-settings');
 }
 function signOut(){localStorage.clear();sessionStorage.clear();location.reload()}
 
-/* ─── LOREBOOK ─── */
+// ─── LOREBOOK ───
 function renderLorebook(){
   const list=g('lb-list');list.innerHTML='';
-  if(S.lorebook.length===0){
-    list.innerHTML='<p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">No entries yet. Add your first world info entry below.</p>';return;
-  }
+  if(!S.lorebook.length){list.innerHTML='<p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">No entries yet.</p>';return}
   S.lorebook.forEach((e,i)=>{
     const d=document.createElement('div');d.className='lb-entry';
-    d.innerHTML=`<div class="lb-kw">⬡ ${e.keyword}</div><div class="lb-ct">${e.content}</div><button class="lb-del" onclick="deleteLB(${i})" aria-label="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`;
+    d.innerHTML=`<div class="lb-kw">⬡ ${e.keyword}</div><div class="lb-ct">${e.content}</div><button class="lb-del" onclick="deleteLB(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`;
     list.appendChild(d);
   });
 }
@@ -569,17 +717,17 @@ function addLBEntry(){
   if(!kw||!ct){toast('Enter both a keyword and content');return}
   S.lorebook.push({keyword:kw,content:ct});
   g('lb-kw').value='';g('lb-ct').value='';
-  persist();renderLorebook();toast('Entry added',true);
+  saveChatData();renderLorebook();toast('Entry added',true);
 }
-function deleteLB(i){S.lorebook.splice(i,1);persist();renderLorebook()}
+function deleteLB(i){S.lorebook.splice(i,1);saveChatData();renderLorebook()}
 
-/* ─── IMPORT / EXPORT ─── */
+// ─── IMPORT / EXPORT ───
 function exportCard(){
   const card={spec:'lore_v1',char:S.char,persona:S.persona,authorNote:S.authorNote,anDepth:S.anDepth,lorebook:S.lorebook};
   const a=document.createElement('a');
   a.href='data:application/json,'+encodeURIComponent(JSON.stringify(card,null,2));
   a.download=(S.char.name||'character').toLowerCase().replace(/\s+/g,'_')+'.json';
-  a.click();toast('Card exported',true);
+  a.click();toast('Exported',true);
 }
 function importCard(ev){
   const file=ev.target.files[0];if(!file)return;
@@ -589,24 +737,18 @@ function importCard(ev){
       const d=JSON.parse(e.target.result);
       if(d.spec==='lore_v1'&&d.char){
         S.char=d.char;S.persona=d.persona||{name:'',desc:''};
-        S.authorNote=d.authorNote||'';S.anDepth=d.anDepth||4;S.lorebook=d.lorebook||[];
-        fillSetup();persist();toast('Character imported',true);
+        S.authorNote=d.authorNote||'';S.anDepth=d.anDepth||4;
+        S.lorebook=d.lorebook||[];
+        fillSetup();toast('Character imported',true);
       }else toast('Unrecognized card format');
     }catch{toast('Could not read file')}
   };
   r.readAsText(file);ev.target.value='';
 }
 
-/* ─── ACCORDION ─── */
-function toggleAcc(el){
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
-/* ─── SHOW/HIDE KEY ─── */
-function toggleVis(id){
-  const inp=g(id);inp.type=inp.type==='password'?'text':'password';
-}
+// ─── MISC ───
+function toggleAcc(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open')}
+function toggleVis(id){const i=g(id);i.type=i.type==='password'?'text':'password'}
 
 init();
 </script>
