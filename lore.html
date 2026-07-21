@@ -145,14 +145,15 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field">
     <label class="lbl">Model</label>
     <select id="s-model">
-      <option value="deepseek/deepseek-chat">✦ DeepSeek V3 — Best prose for roleplay</option>
-      <option value="deepseek/deepseek-v4-flash">DeepSeek V4 Flash — Cheapest, 1M context</option>
+      <option value="thedrummer/cydonia-24b-v4.1">✦ Cydonia 24B — Best for roleplay, uncensored</option>
+      <option value="tngtech/tng-r1t-chimera:free">TNG Chimera — Free, built for RP &amp; storytelling</option>
+      <option value="deepseek/deepseek-chat">DeepSeek V3 — Great prose, very cheap</option>
       <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Fast &amp; cheap</option>
-      <option value="google/gemini-2.5-flash">Gemini 2.5 Flash — Smartest Google</option>
+      <option value="google/gemini-2.5-flash">Gemini 2.5 Flash — Long context, smart</option>
+      <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — Free, 1M context</option>
       <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
-      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
+      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Most capable</option>
       <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B — Free option</option>
     </select>
   </div>
   <div class="divider"></div>
@@ -258,14 +259,15 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field">
     <label class="lbl">Model</label>
     <select id="p-model">
-      <option value="deepseek/deepseek-chat">DeepSeek V3</option>
-      <option value="deepseek/deepseek-v4-flash">DeepSeek V4 Flash</option>
+      <option value="thedrummer/cydonia-24b-v4.1">✦ Cydonia 24B — Best for roleplay</option>
+      <option value="tngtech/tng-r1t-chimera:free">TNG Chimera — Free RP model</option>
+      <option value="deepseek/deepseek-chat">DeepSeek V3 — Great prose</option>
       <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
       <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+      <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — Free, 1M ctx</option>
       <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
       <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
       <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
     </select>
   </div>
   <div class="divider"></div>
@@ -330,7 +332,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 <script>
 // ─── STATE ───
 const S = {
-  apiKey:'', model:'deepseek/deepseek-chat',
+  apiKey:'', model:'thedrummer/cydonia-24b-v4.1',
   char:{name:'',person:'',scene:'',first:'',example:''},
   persona:{name:'',desc:''},
   authorNote:'', anDepth:4,
@@ -594,27 +596,44 @@ function buildMessages(){
 }
 
 async function streamReply(typingId){
-  const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-    method:'POST',
-    headers:{'Authorization':`Bearer ${S.apiKey}`,'Content-Type':'application/json','HTTP-Referer':location.origin||'https://lore-app.github.io','X-Title':'Lore'},
-    body:JSON.stringify({model:S.model,messages:buildMessages(),stream:true,temperature:0.93,max_tokens:S.maxTokens})
-  });
-  if(!res.ok){let m='API error';try{const j=await res.json();m=j.error?.message||m}catch{}throw new Error(m)}
+  let res;
+  try{
+    res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${S.apiKey}`,'Content-Type':'application/json','HTTP-Referer':location.origin||'https://lore-app.github.io','X-Title':'Lore'},
+      body:JSON.stringify({model:S.model,messages:buildMessages(),stream:true,temperature:0.93,max_tokens:S.maxTokens})
+    });
+  }catch(e){throw new Error('Network error — check your connection')}
+  if(!res.ok){
+    let m='API error ('+res.status+')';
+    try{const j=await res.json();m=j.error?.message||m}catch{}
+    if(res.status===402)m='Out of credits — top up your OpenRouter wallet';
+    if(res.status===429)m='Rate limit hit — wait a moment and try again';
+    if(res.status===401)m='Invalid API key — check Settings';
+    if(res.status===404)m='Model not found — check model ID in Settings';
+    throw new Error(m);
+  }
   const el=document.getElementById(typingId);
   const bubble=el?.querySelector('.msg-bubble');
   if(bubble)bubble.innerHTML='';
-  const reader=res.body.getReader(),dec=new TextDecoder();
-  let full='';
-  while(true){
-    const{done,value}=await reader.read();if(done)break;
-    for(const line of dec.decode(value).split('\n')){
-      if(!line.startsWith('data: '))continue;
-      const d=line.slice(6).trim();if(d==='[DONE]')continue;
-      try{
-        const delta=JSON.parse(d).choices?.[0]?.delta?.content||'';
-        if(delta&&bubble){full+=delta;bubble.textContent=full;scrollBot()}
-      }catch{}
+  let reader,dec=new TextDecoder(),full='';
+  try{reader=res.body.getReader()}catch(e){throw new Error('Stream error — try again')}
+  try{
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      for(const line of dec.decode(value).split('\n')){
+        if(!line.startsWith('data: '))continue;
+        const d=line.slice(6).trim();if(d==='[DONE]')continue;
+        try{
+          const delta=JSON.parse(d).choices?.[0]?.delta?.content||'';
+          if(delta&&bubble){full+=delta;bubble.textContent=full;scrollBot()}
+        }catch{}
+      }
     }
+  }catch(e){
+    if(full){S.conversation.push({role:'assistant',content:full});updateTokens()}
+    if(!full)throw new Error('Stream interrupted — try again');
+    return;
   }
   if(full){S.conversation.push({role:'assistant',content:full});updateTokens()}
 }
