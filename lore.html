@@ -145,15 +145,15 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field">
     <label class="lbl">Model</label>
     <select id="s-model">
-      <option value="thedrummer/cydonia-24b-v4.1">✦ Cydonia 24B — Best for roleplay, uncensored</option>
-      <option value="tngtech/tng-r1t-chimera:free">TNG Chimera — Free, built for RP &amp; storytelling</option>
-      <option value="deepseek/deepseek-chat">DeepSeek V3 — Great prose, very cheap</option>
-      <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Fast &amp; cheap</option>
-      <option value="google/gemini-2.5-flash">Gemini 2.5 Flash — Long context, smart</option>
-      <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — Free, 1M context</option>
+      <option value="deepseek/deepseek-v4-flash-20260423">✦ DeepSeek V4 Flash — #1 RP model, $0.09/1M, 1M ctx</option>
+      <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B, top 7 for RP</option>
+      <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — $0.10/1M, 1M context, very cheap</option>
+      <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback, great prose</option>
+      <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Fast and cheap</option>
+      <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash — Latest Google, strong reasoning</option>
+      <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B — Best writing quality (unreliable uptime)</option>
       <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
       <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Most capable</option>
-      <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
     </select>
   </div>
   <div class="divider"></div>
@@ -259,15 +259,15 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field">
     <label class="lbl">Model</label>
     <select id="p-model">
-      <option value="thedrummer/cydonia-24b-v4.1">✦ Cydonia 24B — Best for roleplay</option>
-      <option value="tngtech/tng-r1t-chimera:free">TNG Chimera — Free RP model</option>
-      <option value="deepseek/deepseek-chat">DeepSeek V3 — Great prose</option>
+      <option value="deepseek/deepseek-v4-flash-20260423">✦ DeepSeek V4 Flash — #1 RP, cheapest</option>
+      <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B</option>
+      <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — Very cheap, 1M ctx</option>
+      <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback</option>
       <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
-      <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
-      <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick — Free, 1M ctx</option>
+      <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash Preview</option>
+      <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B (unreliable uptime)</option>
       <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
       <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
-      <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
     </select>
   </div>
   <div class="divider"></div>
@@ -332,7 +332,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 <script>
 // ─── STATE ───
 const S = {
-  apiKey:'', model:'thedrummer/cydonia-24b-v4.1',
+  apiKey:'', model:'deepseek/deepseek-v4-flash-20260423',
   char:{name:'',person:'',scene:'',first:'',example:''},
   persona:{name:'',desc:''},
   authorNote:'', anDepth:4,
@@ -606,12 +606,14 @@ async function streamReply(typingId){
   }catch(e){throw new Error('Network error — check your connection')}
   if(!res.ok){
     let m='API error ('+res.status+')';
-    try{const j=await res.json();m=j.error?.message||m}catch{}
-    if(res.status===402)m='Out of credits — top up your OpenRouter wallet';
-    if(res.status===429)m='Rate limit hit — wait a moment and try again';
-    if(res.status===401)m='Invalid API key — check Settings';
-    if(res.status===404)m='Model not found — check model ID in Settings';
-    throw new Error(m);
+    let raw='';
+    try{const j=await res.json();raw=j.error?.message||'';m=raw||m}catch{}
+    if(res.status===402&&!raw)m='Out of credits — top up your OpenRouter wallet';
+    if(res.status===401&&!raw)m='Invalid API key — check Settings';
+    if(res.status===404&&!raw)m='Model not found — try a different model in Settings';
+    // Log full error to console for debugging
+    console.error('OpenRouter error',res.status,raw);
+    throw new Error(m+' ['+res.status+']');
   }
   const el=document.getElementById(typingId);
   const bubble=el?.querySelector('.msg-bubble');
