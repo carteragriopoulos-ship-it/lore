@@ -149,6 +149,8 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B, top 7 for RP</option>
       <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — $0.10/1M, 1M context, very cheap</option>
       <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback, great prose</option>
+      <option value="moonshotai/kimi-k2.6">Kimi K2.6 — Most varied/creative prose, 21 providers</option>
+      <option value="minimax/minimax-m3">MiniMax M3 — Cheap, 1M ctx, strong for RP</option>
       <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Fast and cheap</option>
       <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash — Latest Google, strong reasoning</option>
       <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B — Best writing quality (unreliable uptime)</option>
@@ -263,6 +265,8 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
       <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B</option>
       <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — Very cheap, 1M ctx</option>
       <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback</option>
+      <option value="moonshotai/kimi-k2.6">Kimi K2.6 — Most varied/creative, 21 providers</option>
+      <option value="minimax/minimax-m3">MiniMax M3 — Cheap, 1M ctx</option>
       <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
       <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash Preview</option>
       <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B (unreliable uptime)</option>
@@ -595,15 +599,37 @@ function buildMessages(){
   return msgs;
 }
 
+// Retries only on network-level failures (fetch throwing — e.g. WiFi still
+// connecting, DNS hiccup, dropped packet). Does NOT retry HTTP error responses
+// (401/402/404 etc) since those are real errors a retry won't fix.
+async function fetchWithRetry(url,options,maxRetries=3,onRetry=null){
+  let lastErr;
+  for(let attempt=0;attempt<=maxRetries;attempt++){
+    try{
+      const res=await fetch(url,options);
+      if(onRetry)onRetry(0);
+      return res;
+    }catch(e){
+      lastErr=e;
+      if(attempt<maxRetries){
+        if(onRetry)onRetry(attempt+1);
+        await new Promise(r=>setTimeout(r,500*Math.pow(2,attempt))); // 500ms, 1s, 2s
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function streamReply(typingId){
   let res;
   try{
-    res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    res=await fetchWithRetry('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':`Bearer ${S.apiKey}`,'Content-Type':'application/json','HTTP-Referer':location.origin||'https://lore-app.github.io','X-Title':'Lore'},
       body:JSON.stringify({model:S.model,messages:buildMessages(),stream:true,temperature:0.93,max_tokens:S.maxTokens})
-    });
-  }catch(e){throw new Error('Network error — check your connection')}
+    },3,(attempt)=>{setStatus(attempt?'Reconnecting… ('+attempt+'/3)':'')});
+  }catch(e){setStatus('');throw new Error('Network error after 3 retries — check your connection')}
+  setStatus('');
   if(!res.ok){
     let m='API error ('+res.status+')';
     let raw='';
@@ -764,12 +790,46 @@ function addLBEntry(){
 function deleteLB(i){S.lorebook.splice(i,1);saveChatData();renderLorebook()}
 
 // ─── IMPORT / EXPORT ───
-function exportCard(){
+// data: URIs silently fail to save on iOS Safari/WebKit — use Web Share API
+// (opens the native "Save to Files/iCloud/Drive" sheet) with a Blob-download
+// fallback for desktop browsers that don't support file sharing.
+async function exportJSON(filename,dataObj){
+  const jsonStr=JSON.stringify(dataObj,null,2);
+  const blob=new Blob([jsonStr],{type:'application/json'});
+  if(navigator.canShare){
+    try{
+      const file=new File([blob],filename,{type:'application/json'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:filename});
+        return 'shared';
+      }
+    }catch(e){
+      if(e.name==='AbortError')return 'cancelled';
+      // fall through to blob download below
+    }
+  }
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    return 'downloaded';
+  }catch(e){
+    try{
+      const url=URL.createObjectURL(blob);
+      window.open(url,'_blank');
+      return 'opened';
+    }catch(e2){return 'failed'}
+  }
+}
+async function exportCard(){
   const card={spec:'lore_v1',char:S.char,persona:S.persona,authorNote:S.authorNote,anDepth:S.anDepth,lorebook:S.lorebook};
-  const a=document.createElement('a');
-  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(card,null,2));
-  a.download=(S.char.name||'character').toLowerCase().replace(/\s+/g,'_')+'.json';
-  a.click();toast('Exported',true);
+  const filename=(S.char.name||'character').toLowerCase().replace(/\s+/g,'_')+'.json';
+  const result=await exportJSON(filename,card);
+  if(result==='cancelled')return;
+  if(result==='failed')toast('Export failed — try again');
+  else toast('Exported',true);
 }
 function importCard(ev){
   const file=ev.target.files[0];if(!file)return;
@@ -789,7 +849,7 @@ function importCard(ev){
 }
 
 // ─── CHAT LOG EXPORT / IMPORT ───
-function exportChatLog(){
+async function exportChatLog(){
   const log={
     spec:'lore_chatlog_v1',
     exportedAt:new Date().toISOString(),
@@ -798,11 +858,12 @@ function exportChatLog(){
     maxTokens:S.maxTokens, lorebook:S.lorebook,
     conversation:S.conversation, memory:S.memory
   };
-  const a=document.createElement('a');
   const date=new Date().toISOString().split('T')[0];
-  a.href='data:application/json,'+encodeURIComponent(JSON.stringify(log,null,2));
-  a.download=(S.char.name||'chat').toLowerCase().replace(/\s+/g,'_')+'_'+date+'.json';
-  a.click();toast('Chat log exported — save to iCloud or Google Drive as backup',true);
+  const filename=(S.char.name||'chat').toLowerCase().replace(/\s+/g,'_')+'_'+date+'.json';
+  const result=await exportJSON(filename,log);
+  if(result==='cancelled')return;
+  if(result==='failed')toast('Export failed — try again');
+  else toast('Chat log exported — save to iCloud or Google Drive as backup',true);
 }
 function importChatLog(ev){
   const file=ev.target.files[0];if(!file)return;
