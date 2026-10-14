@@ -30,6 +30,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 .btn-primary{background:var(--accent);color:#180f00}
 .btn-danger{background:rgba(224,82,82,0.09);border:1px solid rgba(224,82,82,0.25)!important;color:var(--danger)}
 .btn-ghost{background:transparent;border:1px solid var(--border-med)!important;color:var(--text-mid);font-size:14px;padding:11px}
+.hint-txt{font-size:12px;color:var(--text-mid);line-height:1.5;margin-top:6px}
 .divider{height:1px;background:var(--border);margin:20px 0}
 .section-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--text);margin-bottom:16px}
 .tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:20px;background:var(--accent-soft);color:var(--accent)}
@@ -144,19 +145,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   </div>
   <div class="field">
     <label class="lbl">Model</label>
-    <select id="s-model">
-      <option value="deepseek/deepseek-v4-flash-20260423">✦ DeepSeek V4 Flash — #1 RP model, $0.09/1M, 1M ctx</option>
-      <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B, top 7 for RP</option>
-      <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — $0.10/1M, 1M context, very cheap</option>
-      <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback, great prose</option>
-      <option value="moonshotai/kimi-k2.6">Kimi K2.6 — Most varied/creative prose, 21 providers</option>
-      <option value="minimax/minimax-m3">MiniMax M3 — Cheap, 1M ctx, strong for RP</option>
-      <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — Fast and cheap</option>
-      <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash — Latest Google, strong reasoning</option>
-      <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B — Best writing quality (unreliable uptime)</option>
-      <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
-      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 — Most capable</option>
-    </select>
+    <select id="s-model"></select>
   </div>
   <div class="divider"></div>
   <div class="section-title">Character</div>
@@ -173,9 +162,9 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="accordion-body">
     <div class="field"><label class="lbl">Your Persona Name</label><input type="text" id="s-pname" placeholder="Your character's name" autocorrect="off"></div>
     <div class="field"><label class="lbl">Your Persona Description</label><textarea id="s-pdesc" rows="2" placeholder="Who you are in this world..."></textarea></div>
-    <div class="field"><label class="lbl">Author's Note</label><textarea id="s-anote" rows="2" placeholder="Style instructions injected near the end of context..."></textarea></div>
+    <div class="field"><label class="lbl">Author's Note</label><textarea id="s-anote" rows="2" placeholder="e.g. Slow burn. More dialogue, less narration. Describe her body language."></textarea><p class="hint-txt">A hidden instruction slipped in right before the AI replies, every turn. Use it to steer tone, pacing, or where the story goes — it beats the character card because it's always fresh.</p></div>
     <div class="field">
-      <label class="lbl">Author's Note Depth</label>
+      <label class="lbl">How hard it steers</label>
       <select id="s-adepth">
         <option value="2">2 — Very strong</option>
         <option value="4" selected>4 — Recommended</option>
@@ -184,7 +173,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
     </div>
   </div>
   <div class="divider"></div>
-  <label class="remember-row"><input type="checkbox" id="s-remember">Keep me signed in on this device</label>
+  <label class="remember-row"><input type="checkbox" id="s-remember" checked>Remember my key on this device</label>
   <button class="btn btn-primary" onclick="startChat()" style="margin-bottom:10px">Enter the Story →</button>
   <button class="btn btn-ghost" onclick="g('import-setup').click()">Import Character Card (.json)</button>
   <input type="file" id="import-setup" accept=".json" style="display:none" onchange="importCard(event)">
@@ -260,19 +249,7 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   </div>
   <div class="field">
     <label class="lbl">Model</label>
-    <select id="p-model">
-      <option value="deepseek/deepseek-v4-flash-20260423">✦ DeepSeek V4 Flash — #1 RP, cheapest</option>
-      <option value="tencent/hy3:free">Tencent Hy3 — Free, 295B</option>
-      <option value="xiaomi/mimo-v2.5-20260422">MiMo V2.5 — Very cheap, 1M ctx</option>
-      <option value="deepseek/deepseek-chat">DeepSeek V3 — Reliable fallback</option>
-      <option value="moonshotai/kimi-k2.6">Kimi K2.6 — Most varied/creative, 21 providers</option>
-      <option value="minimax/minimax-m3">MiniMax M3 — Cheap, 1M ctx</option>
-      <option value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
-      <option value="google/gemini-3-flash-preview-20251217">Gemini 3 Flash Preview</option>
-      <option value="thedrummer/cydonia-24b-v4.1">Cydonia 24B (unreliable uptime)</option>
-      <option value="anthropic/claude-haiku-4-5">Claude Haiku 4.5</option>
-      <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5</option>
-    </select>
+    <select id="p-model"></select>
   </div>
   <div class="divider"></div>
   <div class="section-title" style="font-size:17px">Character</div>
@@ -285,9 +262,9 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="section-title" style="font-size:17px">Persona &amp; Author's Note</div>
   <div class="field"><label class="lbl">Your Persona Name</label><input type="text" id="p-pname" autocorrect="off"></div>
   <div class="field"><label class="lbl">Your Persona Description</label><textarea id="p-pdesc" rows="2"></textarea></div>
-  <div class="field"><label class="lbl">Author's Note</label><textarea id="p-anote" rows="2"></textarea></div>
+  <div class="field"><label class="lbl">Author's Note</label><textarea id="p-anote" rows="2" placeholder="e.g. Slow burn. More dialogue, less narration. Describe her body language."></textarea><p class="hint-txt">A hidden instruction slipped in right before the AI replies, every turn. Use it to steer tone, pacing, or where the story goes.</p></div>
   <div class="field">
-    <label class="lbl">Author's Note Depth</label>
+    <label class="lbl">How hard it steers</label>
     <select id="p-adepth">
       <option value="2">2 — Very strong</option>
       <option value="4">4 — Recommended</option>
@@ -297,10 +274,10 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
   <div class="field">
     <label class="lbl">Response Length</label>
     <select id="p-maxtokens">
-      <option value="400">Snappy — Short exchanges, quick replies</option>
-      <option value="800" selected>Balanced — Default, most situations</option>
-      <option value="1500">Detailed — Rich descriptions, longer scenes</option>
-      <option value="2500">Epic — Long narrative passages</option>
+      <option value="400">Short — about 60–120 words</option>
+      <option value="800" selected>Medium — about 150–250 words</option>
+      <option value="1500">Long — about 300–450 words</option>
+      <option value="2500">Epic — about 500–700 words</option>
     </select>
   </div>
   <div class="divider"></div>
@@ -334,9 +311,28 @@ label.lbl{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:up
 <div id="toast"></div>
 
 <script>
+// ─── MODELS (IDs verified on openrouter.ai, Oct 2026) ───
+const MODELS=[
+  ['moonshotai/kimi-k2.6','Kimi K2.6 — most creative prose of the cheap tier'],
+  ['qwen/qwen3-235b-a22b-2507','Qwen3 235B Instruct — top creative score, very cheap'],
+  ['z-ai/glm-5.3-flash','GLM 5.3 Flash — strong storytelling, cheap'],
+  ['thedrummer/cydonia-24b-v4.1','Cydonia 24B — built for RP (one provider, can be busy)'],
+  ['deepseek/deepseek-v4.1-flash','DeepSeek V4.1 Flash — newest DeepSeek, cheapest'],
+  ['xiaomi/mimo-v2.6-flash','MiMo V2.6 Flash — cheap, 1M context'],
+  ['minimax/minimax-m3','MiniMax M3 — 1M context'],
+  ['deepseek/deepseek-chat','DeepSeek V3 — reliable fallback']
+];
+function fillModelSelect(id){
+  const sel=g(id);if(!sel)return;
+  const ids=MODELS.map(m=>m[0]);
+  let opts=MODELS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  if(S.model&&!ids.includes(S.model))opts=`<option value="${S.model}">Current: ${S.model}</option>`+opts;
+  sel.innerHTML=opts;sel.value=S.model;
+}
+
 // ─── STATE ───
 const S = {
-  apiKey:'', model:'deepseek/deepseek-v4-flash-20260423',
+  apiKey:'', model:'qwen/qwen3-235b-a22b-2507',
   char:{name:'',person:'',scene:'',first:'',example:''},
   persona:{name:'',desc:''},
   authorNote:'', anDepth:4,
@@ -409,19 +405,26 @@ function toast(msg,ok){
   t.style.background=ok?'rgba(58,184,122,0.92)':'rgba(224,82,82,0.9)';
   t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2500);
 }
-function getStore(){return localStorage.getItem('lore_remember')==='1'?localStorage:sessionStorage}
+function getStore(){
+  try{return localStorage.getItem('lore_remember')==='0'?sessionStorage:localStorage}catch(e){return sessionStorage}
+}
 function persistConfig(){
-  const st=getStore();
-  st.setItem('lore_key',S.apiKey);st.setItem('lore_model',S.model);
+  try{
+    const st=getStore();
+    st.setItem('lore_key',S.apiKey);st.setItem('lore_model',S.model);
+    if(st===localStorage)sessionStorage.removeItem('lore_key');
+  }catch(e){toast('Browser blocked saving — turn off Private mode / Block All Cookies')}
 }
 
 // ─── INIT ───
 function init(){
-  const rem=localStorage.getItem('lore_remember')==='1';
-  const st=rem?localStorage:sessionStorage;
-  const k=st.getItem('lore_key');
+  const rem=localStorage.getItem('lore_remember')!=='0';
+  const k=localStorage.getItem('lore_key')||sessionStorage.getItem('lore_key');
+  S.model=localStorage.getItem('lore_model')||sessionStorage.getItem('lore_model')||S.model;
+  fillModelSelect('s-model');fillModelSelect('p-model');
+  g('s-remember').checked=rem;
   if(k){
-    S.apiKey=k; S.model=st.getItem('lore_model')||S.model;
+    S.apiKey=k;
     // check for last chat
     const idx=getChatIndex();
     if(idx.length>0&&loadChatData(idx[0].id)){
@@ -452,7 +455,7 @@ function startChat(){
   S.conversation=[]; S.memory=''; S.lorebook=[];
   const rem=g('s-remember').checked;
   localStorage.setItem('lore_remember',rem?'1':'0');
-  if(!rem)localStorage.removeItem('lore_key');
+  if(!rem){localStorage.removeItem('lore_key');localStorage.removeItem('lore_model')}
   persistConfig();
   S.currentChatId=newChatId();
   saveChatData();
@@ -524,7 +527,7 @@ function switchChat(id){
 
 function newChat(){
   saveChatData();
-  S.conversation=[]; S.memory=[]; S.currentChatId=null;
+  S.conversation=[]; S.memory=''; S.currentChatId=null;
   closePanel('panel-chats');
   g('screen-chat').style.display='none';
   g('screen-setup').style.display='flex';
@@ -588,15 +591,34 @@ function buildSysPrompt(){
   return s;
 }
 
+// Length presets: the word target is what actually controls length across
+// models; max_tokens is only a safety ceiling with headroom so replies
+// don't get chopped mid-sentence.
+const LENGTHS={
+  400:{words:'60 to 120',cap:600},
+  800:{words:'150 to 250',cap:1000},
+  1500:{words:'300 to 450',cap:1600},
+  2500:{words:'500 to 700',cap:2400}
+};
+function lengthCfg(){return LENGTHS[S.maxTokens]||LENGTHS[800]}
+
 function buildMessages(){
   const msgs=[{role:'system',content:buildSysPrompt()}];
   const conv=[...S.conversation];
   const insertAt=Math.max(0,conv.length-S.anDepth*2);
+  let noted=false;
   conv.forEach((m,i)=>{
-    if(S.authorNote&&i===insertAt)msgs.push({role:'system',content:`[Author's note: ${S.authorNote}]`});
+    if(S.authorNote&&i===insertAt){msgs.push({role:'system',content:`[Author's note: ${S.authorNote}]`});noted=true}
     msgs.push(m);
   });
+  if(S.authorNote&&!noted)msgs.push({role:'system',content:`[Author's note: ${S.authorNote}]`});
+  msgs.push({role:'system',content:`[Reply length: write about ${lengthCfg().words} words this turn — no shorter, no longer. End on a complete sentence. Vary your sentence rhythm and openings; don't reuse the structure or opening phrase of your previous reply.]`});
   return msgs;
+}
+
+function trimToSentence(t){
+  const m=t.match(/^[\s\S]*[.!?…"”*)](?=\s|$)/);
+  return m&&m[0].length>t.length*0.5?m[0]:t;
 }
 
 // Retries on network-level failures (fetch throwing — e.g. WiFi still
@@ -635,7 +657,7 @@ async function streamReply(typingId){
     res=await fetchWithRetry('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':`Bearer ${S.apiKey}`,'Content-Type':'application/json','HTTP-Referer':location.origin||'https://lore-app.github.io','X-Title':'Lore'},
-      body:JSON.stringify({model:S.model,messages:buildMessages(),stream:true,temperature:0.93,max_tokens:S.maxTokens,reasoning:{effort:'low',exclude:true}})
+      body:JSON.stringify({model:S.model,messages:buildMessages(),stream:true,temperature:0.93,max_tokens:lengthCfg().cap,reasoning:{effort:'low',exclude:true}})
     },3,(attempt)=>{setStatus(attempt?'Reconnecting… ('+attempt+'/3)':'')});
   }catch(e){setStatus('');throw new Error('Network error after 3 retries — check your connection')}
   setStatus('');
@@ -653,7 +675,7 @@ async function streamReply(typingId){
   const el=document.getElementById(typingId);
   const bubble=el?.querySelector('.msg-bubble');
   if(bubble)bubble.innerHTML='';
-  let reader,dec=new TextDecoder(),full='',sawReasoning=false;
+  let reader,dec=new TextDecoder(),full='',sawReasoning=false,finish='';
   try{reader=res.body.getReader()}catch(e){throw new Error('Stream error — try again')}
   try{
     while(true){
@@ -662,7 +684,9 @@ async function streamReply(typingId){
         if(!line.startsWith('data: '))continue;
         const d=line.slice(6).trim();if(d==='[DONE]')continue;
         try{
-          const delta=JSON.parse(d).choices?.[0]?.delta||{};
+          const ch=JSON.parse(d).choices?.[0]||{};
+          if(ch.finish_reason)finish=ch.finish_reason;
+          const delta=ch.delta||{};
           if(delta.reasoning||delta.reasoning_content)sawReasoning=true;
           const piece=delta.content||'';
           if(piece&&bubble){full+=piece;bubble.textContent=full;scrollBot()}
@@ -674,6 +698,7 @@ async function streamReply(typingId){
     if(!full)throw new Error('Stream interrupted — try again');
     return;
   }
+  if(full&&finish==='length'){full=trimToSentence(full);if(bubble)bubble.textContent=full}
   if(!full&&sawReasoning){
     throw new Error('Model spent its whole reply budget thinking and produced no visible text — try again, or raise Response Length in Settings');
   }
@@ -755,7 +780,7 @@ function overlayClick(e,el){if(e.target===el)el.classList.remove('open')}
 
 // ─── SETTINGS ───
 function fillPanelSettings(){
-  g('p-key').value=S.apiKey;g('p-model').value=S.model;
+  g('p-key').value=S.apiKey;fillModelSelect('p-model');
   g('p-cname').value=S.char.name;g('p-cperson').value=S.char.person;
   g('p-cscene').value=S.char.scene;g('p-cfirst').value=S.char.first;
   g('p-cexample').value=S.char.example;g('p-pname').value=S.persona.name;
